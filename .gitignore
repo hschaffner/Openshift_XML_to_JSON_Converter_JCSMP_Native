@@ -1,0 +1,12 @@
+/.metadata/
+/.recommenders/
+.classpath
+.project
+.settings
+.DS_Store
+images/
+bin/
+*.iml
+libs/
+/build/
+/target/
