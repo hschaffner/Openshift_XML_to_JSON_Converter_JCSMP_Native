@@ -61,7 +61,7 @@ public class XML_to_JSON_Converter_JCSMP_Native implements XMLMessageListener{
 		SOL_TOPIC_RESEND = System.getenv("SOL_TOPIC_RESEND");
 		SOL_VPN = System.getenv("SOL_VPN");
 
-
+		sem = new Semaphore(0);
 
 		final Logger logger = LoggerFactory.getLogger(XML_to_JSON_Converter_JCSMP_Native.class);
 
