@@ -38,7 +38,7 @@ public class XML_to_JSON_Converter_JCSMP_Native implements XMLMessageListener{
 	JCSMPSession session = null;
 	XMLMessageConsumer cons = null;
 	XMLMessageProducer prod = null;
-	private Semaphore sem = null;
+	Semaphore sem = null;
 	Topic topic;
 	Topic topicResend;
 	private static boolean stopping = false;
@@ -156,155 +156,155 @@ public class XML_to_JSON_Converter_JCSMP_Native implements XMLMessageListener{
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
-	*/
+		 */
 	}
-		 
-
-
-		public boolean convertAndSend(String msgText, BytesXMLMessage _msg ) {
-			boolean status = true;
-			TextMessage textMsg = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
-
-			JSONObject jsonObject = null;
-			String jsonText = null;
-			try {
-				jsonObject = XML.toJSONObject(msgText);
-				jsonText = jsonObject.toString(PRETTY_PRINT_INDENT_FACTOR);
-
-			} catch (JSONException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-			//System.out.println(msgText);
-			textMsg.clearAttachment();
-			textMsg.clearContent();
-			textMsg.setText(jsonText);
-			textMsg.setDeliveryMode(DeliveryMode.PERSISTENT);
-			textMsg.setDeliverToOne(true);
 
 
 
+	public boolean convertAndSend(String msgText, BytesXMLMessage _msg ) {
+		boolean status = true;
+		TextMessage textMsg = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
 
-			// Set the message's correlation key. This reference
-			// is used when calling back to responseReceivedEx().
-			if (_msg.getCorrelationId() != null) {
-				textMsg.setCorrelationId(_msg.getCorrelationId());
-			}
+		JSONObject jsonObject = null;
+		String jsonText = null;
+		try {
+			jsonObject = XML.toJSONObject(msgText);
+			jsonText = jsonObject.toString(PRETTY_PRINT_INDENT_FACTOR);
 
-
-			try {
-				prod.send(textMsg, topicResend);
-			} catch (JCSMPException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			return status;
-
+		} catch (JSONException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 
-		public void onException(JCSMPException je) {
-			logger.info(" +++++++++++++ Received JCSMPException:\n\t" + je.getLocalizedMessage());
+		//System.out.println(msgText);
+		textMsg.clearAttachment();
+		textMsg.clearContent();
+		textMsg.setText(jsonText);
+		textMsg.setDeliveryMode(DeliveryMode.PERSISTENT);
+		textMsg.setDeliverToOne(true);
 
+
+
+
+		// Set the message's correlation key. This reference
+		// is used when calling back to responseReceivedEx().
+		if (_msg.getCorrelationId() != null) {
+			textMsg.setCorrelationId(_msg.getCorrelationId());
 		}
 
-		public void onReceive(BytesXMLMessage msg) {
-			if (msg instanceof TextMessage) {
-				convertAndSend(((TextMessage) msg).getText(), msg);
-			} else {
-				//System.out.println("=======================not text");
-				logger.info("Received non-Text messages");
-			}
 
-
-
-
+		try {
+			prod.send(textMsg, topicResend);
+		} catch (JCSMPException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-		/**
-		 * Close the session and exit.
-		 */
-		protected void finish(final int status) {
-			if (session != null) {
-				printSessionStats(session);
-				session.closeSession();
-			}
-			System.exit(status);
+		return status;
+
+	}
+
+	public void onException(JCSMPException je) {
+		logger.info(" +++++++++++++ Received JCSMPException:\n\t" + je.getLocalizedMessage());
+
+	}
+
+	public void onReceive(BytesXMLMessage msg) {
+		if (msg instanceof TextMessage) {
+			convertAndSend(((TextMessage) msg).getText(), msg);
+		} else {
+			//System.out.println("=======================not text");
+			logger.info("Received non-Text messages");
 		}
 
-		/**
-		 * Prints the most relevant session stats
-		 * @param s
-		 *            parameter
-		 */
-		static void printSessionStats(JCSMPSession s) {
-			if (s == null) return;
-			System.out.println("Number of messages sent: "
-					+ s.getSessionStats().getStat(StatType.TOTAL_MSGS_SENT));
-			System.out.println("Number of messages received: "
-					+ s.getSessionStats().getStat(StatType.TOTAL_MSGS_RECVED));
-		}
 
-		//Makes sure asynchronous call backs continue to be available by prevent application from ending
-		void blockClientFromEnding()
+
+
+	}
+
+	/**
+	 * Close the session and exit.
+	 */
+	protected void finish(final int status) {
+		if (session != null) {
+			printSessionStats(session);
+			session.closeSession();
+		}
+		System.exit(status);
+	}
+
+	/**
+	 * Prints the most relevant session stats
+	 * @param s
+	 *            parameter
+	 */
+	static void printSessionStats(JCSMPSession s) {
+		if (s == null) return;
+		System.out.println("Number of messages sent: "
+				+ s.getSessionStats().getStat(StatType.TOTAL_MSGS_SENT));
+		System.out.println("Number of messages received: "
+				+ s.getSessionStats().getStat(StatType.TOTAL_MSGS_RECVED));
+	}
+
+	//Makes sure asynchronous call backs continue to be available by prevent application from ending
+	void blockClientFromEnding()
+	{
+		while(!stopping)
 		{
-			while(!stopping)
+			//block waiting for semaphore
+			try
 			{
-				//block waiting for semaphore
-				try
-				{
-					logger.info("+++++++++++ About to aquire semaphore");
-					sem.acquire();
-					logger.info("+++++++++++ No longer blocking on semaphore semaphore");
-
-				}
-				catch(InterruptedException e)
-				{
-					//System.err.println("Failed to create Solace Connection");
-					logger.error("Failed to create Solace Connection");
-					logger.warn("Caught Interrupted Exception on Semaphore");
-					stopping = true;
-					sem.release();
-				}
+				logger.info("+++++++++++ About to aquire semaphore");
+				sem.acquire();
+				logger.info("+++++++++++ No longer blocking on semaphore semaphore");
 
 			}
-
-			System.out.println("Everything is down...");
-			System.out.flush();
-		}
-
-		void stopSolace()
-		{
-			logger.info("Stopping consumer and session");
-			if(session != null)
+			catch(InterruptedException e)
 			{
-				System.out.println("FinalStats:\n" + session.getSessionStats().toString());
-				System.out.flush();
-				cons.close();
-				session.closeSession();
-				System.out.println("Stopping consumer and session...");
-				System.out.flush();
-				logger.info("Shuttting Down!");
+				//System.err.println("Failed to create Solace Connection");
+				logger.error("Failed to create Solace Connection");
+				logger.warn("Caught Interrupted Exception on Semaphore");
 				stopping = true;
 				sem.release();
 			}
+
 		}
 
-		//Class that is called when JVM is interrupted. The thread is called
-		//to run when the JVM is interrupted.
-		class SolaceShutdownHook extends Thread
+		System.out.println("Everything is down...");
+		System.out.flush();
+	}
+
+	void stopSolace()
+	{
+		logger.info("Stopping consumer and session");
+		if(session != null)
 		{
-			//JCSMPSession h_session = null;
-			//XMLMessageConsumer h_cons = null;
+			System.out.println("FinalStats:\n" + session.getSessionStats().toString());
+			System.out.flush();
+			cons.close();
+			session.closeSession();
+			System.out.println("Stopping consumer and session...");
+			System.out.flush();
+			logger.info("Shuttting Down!");
+			stopping = true;
+			sem.release();
+		}
+	}
 
-			public void run()
-			{
-				logger.info("\nCaught shutdown interrupt....");
-				stopSolace();
+	//Class that is called when JVM is interrupted. The thread is called
+	//to run when the JVM is interrupted.
+	class SolaceShutdownHook extends Thread
+	{
+		//JCSMPSession h_session = null;
+		//XMLMessageConsumer h_cons = null;
 
-			}
+		public void run()
+		{
+			logger.info("\nCaught shutdown interrupt....");
+			stopSolace();
 
 		}
 
 	}
+
+}
