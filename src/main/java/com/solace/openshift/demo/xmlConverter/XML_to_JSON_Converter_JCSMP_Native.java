@@ -1,6 +1,7 @@
 package com.solace.openshift.demo.xmlConverter;
 
 import java.util.concurrent.Semaphore;
+import java.util.Random;
 
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.ConsumerFlowProperties;
@@ -65,6 +66,7 @@ public class XML_to_JSON_Converter_JCSMP_Native implements XMLMessageListener{
 
 		final Logger logger = LoggerFactory.getLogger(XML_to_JSON_Converter_JCSMP_Native.class);
 
+		String ClientID = SOL_USER + "-" + getRandom();
 
 		logger.info("Createing JSCMP Session");
 		JCSMPProperties properties = new JCSMPProperties();
@@ -75,6 +77,8 @@ public class XML_to_JSON_Converter_JCSMP_Native implements XMLMessageListener{
 		properties.setBooleanProperty(JCSMPProperties.REAPPLY_SUBSCRIPTIONS, true);
 		properties.setBooleanProperty(JCSMPProperties.SSL_VALIDATE_CERTIFICATE, false);
 		properties.setProperty(JCSMPProperties.VPN_NAME, SOL_VPN);
+		properties.setProperty(JCSMPProperties.CLIENT_NAME, ClientID);
+		
 
 		if( System.getenv("SOL_TOPIC_RESEND") !=null) {
 			topicResend = JCSMPFactory.onlyInstance().createTopic(System.getenv("SOL_TOPIC_RESEND"));
@@ -159,7 +163,13 @@ public class XML_to_JSON_Converter_JCSMP_Native implements XMLMessageListener{
 		 */
 	}
 
-
+	public String getRandom() {
+		String randomValue = null;
+		Random randomGenerator = new Random();
+		int randomInt = randomGenerator.nextInt(10000);
+		randomValue = Integer.toString(randomInt);
+		return randomValue;
+	}
 
 	public boolean convertAndSend(String msgText, BytesXMLMessage _msg ) {
 		boolean status = true;
